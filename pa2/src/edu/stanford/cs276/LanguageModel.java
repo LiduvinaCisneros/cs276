@@ -10,6 +10,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 import edu.stanford.cs276.util.Dictionary;
 
@@ -25,8 +27,18 @@ public class LanguageModel implements Serializable {
 	private static final long serialVersionUID = 1L;
   private static LanguageModel lm_;
 
+  Set<String> vocabulary = new HashSet<String>(); 
+  double V;
+  double T=0;
+  double LAMBDA = 0.1;
+  
   Dictionary unigram = new Dictionary();
   HashMap<String, Dictionary> bigram = new HashMap<String, Dictionary>();
+  
+  Dictionary laplaceSmoothedUnigram = new Dictionary();
+  HashMap<String, Dictionary> laplaceSmoothedBigram = new HashMap<String, Dictionary>();
+
+  
   /*
    * Feel free to add more members here (e.g., a data structure that stores bigrams)
    */
@@ -45,8 +57,80 @@ public class LanguageModel implements Serializable {
    */
   private LanguageModel(String corpusFilePath) throws Exception {
     constructDictionaries(corpusFilePath);
+    
   }
 
+  public double interpolatedProbability(String[] tokens){
+	  String first = tokens[0];
+	  double unigramCount = (double)unigram.count(first);
+	  double p= -Math.log10(unigramCount/T);
+
+	  for (int i=1;i<tokens.length;i++){
+		  String token1 = tokens[i-1];
+		  String token2 = tokens[i];
+		  double bigramCount = (double)bigram.get(token1).count(token2);
+		  p -= LAMBDA*Math.log10(unigram.count(token2)/T)+
+				  (1-LAMBDA)*Math.log10(bigramCount/unigram.count(token1));
+	  }
+	  
+	  return p;
+  }
+
+  
+  public double unigramProbability(String[] tokens){
+	  double p= 0;
+	  
+	  for (int i=0;i<tokens.length;i++){
+		  String token = tokens[i];
+		  double count = (double)unigram.count(token);
+		  p -= Math.log10(count/T);
+	  }
+	  return p;
+  }
+  
+  public double bigramProbability(String[] tokens){
+	  String first = tokens[0];
+	  double unigramCount = (double)unigram.count(first);
+	  double p= -Math.log10(unigramCount/T);
+
+	  for (int i=1;i<tokens.length;i++){
+		  String token1 = tokens[i-1];
+		  String token2 = tokens[i];
+		  double bigramCount = (double)bigram.get(token1).count(token2);
+		  p -= Math.log10(bigramCount/unigram.count(token1));
+	  }
+	  
+	  return p;
+  }
+
+  
+  public double laplaceSmoothedunigramProb(String[] tokens){
+	  double p= 0;
+	  
+	  for (int i=0;i<tokens.length;i++){
+		  String token = tokens[i];
+		  double count = (double)unigram.count(token);
+		  p -= Math.log10((count+1)/(T+V));
+	  }
+	  return p;
+  }
+  
+  public double laplaceSmoothedbigramProb(String[] tokens){
+	  String first = tokens[0];
+	  double unigramCount = (double)unigram.count(first);
+	  double p= -Math.log10((unigramCount+1)/(T+V));
+
+	  for (int i=1;i<tokens.length;i++){
+		  String token1 = tokens[i-1];
+		  String token2 = tokens[i];
+		  double bigramCount = (double)bigram.get(token1).count(token2);
+		  p -= Math.log10((bigramCount+1)/(unigram.count(token1)+V));
+	  }
+	  
+	  return p;
+  }
+  
+  
   /**
    * This method is called by the constructor, and computes language model parameters 
    * (i.e. counts of unigrams, bigrams, etc.), which are then stored in the class members
@@ -75,6 +159,8 @@ public class LanguageModel implements Serializable {
     	  // Go over each index of the tokens
     	  for (int i=0;i<tokens.length;i++) {
     		String tok1 = tokens[i];
+    		T++; // For each token increase the total number of tokens
+    		vocabulary.add(tok1); // Add each token to the vocabulary
     		unigram.add(tok1);
     		// For all the tokens except the first one
     		if (i!=0){
@@ -90,6 +176,7 @@ public class LanguageModel implements Serializable {
     	
         
       }
+      V = vocabulary.size(); // Set V to be the number of words in the dictionary
       input.close();
     }
     System.out.println("Done.");

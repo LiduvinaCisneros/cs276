@@ -28,7 +28,12 @@ public class BuildModels {
     System.out.println("training corpus: " + args[0]);
     languageModel = LanguageModel.create(trainingCorpus);
     noisyChannelModel = NoisyChannelModel.create(editsFile);
-
+    
+    String[] tokens = new String[2];
+    System.out.println(languageModel.bigram.get("I").count("am"));
+    tokens[0]="I";
+    tokens[1]="am";
+    
     // Save the models to disk
     noisyChannelModel.save();
     languageModel.save();
