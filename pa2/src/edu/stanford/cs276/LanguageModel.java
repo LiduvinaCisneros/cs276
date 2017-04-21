@@ -5,9 +5,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.IOError;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.HashMap;
 
 import edu.stanford.cs276.util.Dictionary;
 
@@ -24,7 +26,7 @@ public class LanguageModel implements Serializable {
   private static LanguageModel lm_;
 
   Dictionary unigram = new Dictionary();
-
+  HashMap<String, Dictionary> bigram = new HashMap<String, Dictionary>();
   /*
    * Feel free to add more members here (e.g., a data structure that stores bigrams)
    */
@@ -66,7 +68,27 @@ public class LanguageModel implements Serializable {
          * Remember: each line is a document (refer to PA2 handout)
          * TODO: Your code here
          */
-        unigram.add("cs276");
+    	
+    	  // Split the line into tokens
+    	  String[] tokens = line.trim().split("\\s+");
+
+    	  // Go over each index of the tokens
+    	  for (int i=0;i<tokens.length;i++) {
+    		String tok1 = tokens[i];
+    		unigram.add(tok1);
+    		// For all the tokens except the first one
+    		if (i!=0){
+    			String tok2 = tokens[i-1];
+    			// If tok2 is not in the bigram hashmap, associate an empty dictionary with it
+    			if (!bigram.containsKey(tok2)){
+    				bigram.put(tok2, new Dictionary());
+    			} 
+    			// Add tok1 as one of the entries in the dictionary associated with tok2
+    			bigram.get(tok2).add(tok1);
+    		}
+    	}
+    	
+        
       }
       input.close();
     }

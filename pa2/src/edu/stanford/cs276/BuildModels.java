@@ -26,7 +26,6 @@ public class BuildModels {
       return;
     }
     System.out.println("training corpus: " + args[0]);
-
     languageModel = LanguageModel.create(trainingCorpus);
     noisyChannelModel = NoisyChannelModel.create(editsFile);
 

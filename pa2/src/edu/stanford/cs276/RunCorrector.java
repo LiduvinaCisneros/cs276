@@ -11,7 +11,6 @@ public class RunCorrector {
   public static NoisyChannelModel nsm;
 
   public static void main(String[] args) throws Exception {
-    
     // Parse input arguments
     String uniformOrEmpirical = null;
     String queryFilePath = null;
@@ -59,6 +58,7 @@ public class RunCorrector {
 
     // Load models from disk
     languageModel = LanguageModel.load();
+    System.out.println(languageModel);
     nsm = NoisyChannelModel.load();
     BufferedReader queriesFileReader = new BufferedReader(new FileReader(new File(queryFilePath)));
     nsm.setProbabilityType(uniformOrEmpirical);
