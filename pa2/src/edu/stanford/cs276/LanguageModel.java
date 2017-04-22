@@ -64,15 +64,16 @@ public class LanguageModel implements Serializable {
 
   public double interpolatedProbability(String[] tokens){
 	  String first = tokens[0];
-	  double unigramCount = (double)unigram.count(first);
-	  double p= -Math.log10(unigramCount/T);
+	  double firstUnigramCount = (double)unigram.count(first);
+	  double p= -Math.log10(firstUnigramCount/T);
 
 	  for (int i=1;i<tokens.length;i++){
 		  String token1 = tokens[i-1];
 		  String token2 = tokens[i];
-		  double bigramCount = (double)bigram.get(token1).count(token2);
-		  p -= Math.log10(LAMBDA*(unigram.count(token2)/T)+
-				  		(1-LAMBDA)*(bigramCount/unigram.count(token1)));
+		  double bigramCount = (double)bigram.get(token2).count(token1);
+		  double unigramCount = (double)unigram.count(token1);
+		  p -= Math.log10(LAMBDA*(unigram.count(token1)/T)+
+				  		(1-LAMBDA)*(bigramCount/unigramCount));
 	  }
 	  
 	  return p;
@@ -92,21 +93,22 @@ public class LanguageModel implements Serializable {
   
   public double bigramProbability(String[] tokens){
 	  String first = tokens[0];
-	  double unigramCount = (double)unigram.count(first);
-	  double p= -Math.log10(unigramCount/T);
+	  double firstUnigramCount = (double)unigram.count(first);
+	  double p= -Math.log10(firstUnigramCount/T);
 
 	  for (int i=1;i<tokens.length;i++){
 		  String token1 = tokens[i-1];
 		  String token2 = tokens[i];
-		  double bigramCount = (double)bigram.get(token1).count(token2);
-		  p -= Math.log10(bigramCount/unigram.count(token1));
+		  double bigramCount = (double)bigram.get(token2).count(token1);
+		  double unigramCount = (double)unigram.count(token1);
+		  p -= Math.log10(bigramCount/unigramCount);
 	  }
 	  
 	  return p;
   }
 
   
-  public double laplaceSmoothedunigramProb(String[] tokens){
+  public double laplaceSmoothedUnigramProb(String[] tokens){
 	  double p= 0;
 	  
 	  for (int i=0;i<tokens.length;i++){
@@ -117,21 +119,21 @@ public class LanguageModel implements Serializable {
 	  return p;
   }
   
-  public double laplaceSmoothedbigramProb(String[] tokens){
+  public double laplaceSmoothedBigramProb(String[] tokens){
 	  String first = tokens[0];
-	  double unigramCount = (double)unigram.count(first);
-	  double p= -Math.log10((unigramCount+1)/(T+V));
+	  double firstUnigramCount = (double)unigram.count(first);
+	  double p= -Math.log10((firstUnigramCount+1)/(T+V));
 
 	  for (int i=1;i<tokens.length;i++){
 		  String token1 = tokens[i-1];
 		  String token2 = tokens[i];
-		  double bigramCount = (double)bigram.get(token1).count(token2);
-		  p -= Math.log10((bigramCount+1)/(unigram.count(token1)+V));
+		  double bigramCount = (double)(bigram.get(token2).count(token1)+1);
+		  double unigramCount = (double)(unigram.count(token1) + V);
+		  p -= Math.log10(bigramCount/unigramCount);
 	  }
 	  
 	  return p;
   }
-  
   
   /**
    * This method is called by the constructor, and computes language model parameters 
@@ -169,12 +171,13 @@ public class LanguageModel implements Serializable {
     			String tok2 = tokens[i-1];
     			//System.out.println("Tok2: "+tok2 );
     			// If tok2 is not in the bigram hashmap, associate an empty dictionary with it
-    			if (!bigram.containsKey(tok2)){
-    				bigram.put(tok2, new Dictionary());
+    			if (!bigram.containsKey(tok1)){
+    				bigram.put(tok1, new Dictionary());
     			} 
     			// Add tok1 as one of the entries in the dictionary associated with tok2
-    			bigram.get(tok2).add(tok1);
-    			bigram.get(tok2).sortByValue(); // This is a bad way to do this
+    			bigram.get(tok1).add(tok2);
+    			//System.out.println(tok1 + " " + tok2);
+    			//bigram.get(tok2).sortByValue(); // This is a bad way to do this
     		}
     	}
     	
@@ -183,7 +186,7 @@ public class LanguageModel implements Serializable {
       
       V = vocabulary.size(); // Set V to be the number of words in the dictionary
       
-      
+      /*
       // Sort all unigram counts of each token (I still couldn't get it to work)
       Iterator<String> vocabIter1 = vocabulary.iterator();
       while (vocabIter1.hasNext()){
@@ -209,6 +212,7 @@ public class LanguageModel implements Serializable {
     	  
       
       }
+      */
       input.close();
     }
     System.out.println("Done.");

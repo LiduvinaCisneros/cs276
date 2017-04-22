@@ -123,11 +123,8 @@ public class CandidateGenerator implements Serializable {
 	    	String tok2 = tokens[i+1];
 	    	Dictionary unigramCounts = lm.bigram.get(tok2);
 	    	
-	    	/* 
-	    	 * Get the unigram counts of tok2 if they exist
-	    	 * (remember they are supposed to be sorted by highest value)
-	    	 */
-	    	
+	    	/*  Get the unigram counts of tok2 if they exist
+	    		(remember they are supposed to be sorted by highest value) */
 	    	List<HashMap.Entry<String, Integer>> entries;
 	    	try {
 	    		entries = unigramCounts.getEntries();
