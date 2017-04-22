@@ -3,6 +3,9 @@ package edu.stanford.cs276;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 
 public class RunCorrector {
@@ -62,22 +65,56 @@ public class RunCorrector {
     nsm = NoisyChannelModel.load();
     BufferedReader queriesFileReader = new BufferedReader(new FileReader(new File(queryFilePath)));
     nsm.setProbabilityType(uniformOrEmpirical);
-
+    
+    CandidateGenerator cg = CandidateGenerator.get();
+    
+    /*
+     * Tests for editDistance:
+    
+    System.out.println(cg.editDistance("cats", "cast")==1);
+    System.out.println(cg.editDistance("fats", "cast")==2);
+    System.out.println(cg.editDistance("fatse", "caste")==2);
+    System.out.println(cg.editDistance("fatse", "cast")==3);
+    System.out.println(cg.editDistance("aaa", "a")==2);
+    System.out.println(cg.editDistance("ba", "ab")==1);
+    System.out.println(cg.editDistance("eeeba", "eeeab")==1);
+    System.out.println(cg.editDistance("baeee", "abeee")==1);
+    
+    */
     String query = null;
-
+    
     /*
      * Each line in the file represents one query. We loop over each query and find
      * the most likely correction
      */
     while ((query = queriesFileReader.readLine()) != null) {
-
-      String correctedQuery = query;
+      
       /*
        * Your code here: currently the correctQuery and original query are the same
        * Complete this implementation so that the spell corrector corrects the 
        * (possibly) misspelled query
        * 
        */
+    	
+    	// Find maximally likely candidate
+    	
+    	String bestCand = query;
+    	double bestScore = Double.NEGATIVE_INFINITY;
+    	
+    	
+    	// Iterate over all candidates
+    	Iterator<String> cands =  cg.getCandidates(query, languageModel).iterator();
+    	while(cands.hasNext()) {
+            String newQuery = cands.next();
+            
+            // If the candidate is more likely than bestScore, replace bestCand by it
+            double newScore = nsm.editProbability(query,newQuery);
+            if (newScore>bestScore){
+            	bestCand = newQuery;
+            	bestScore = newScore;
+            }
+         }    	
+    	
       
       if ("extra".equals(extra)) {
         /*
@@ -87,6 +124,9 @@ public class RunCorrector {
          * it will run code for your extra credit and it will run you basic
          * implementations without the "extra" parameter.
          */
+    	  
+
+    	  
       }
 
       // If a gold file was provided, compare our correction to the gold correction
@@ -105,7 +145,7 @@ public class RunCorrector {
        * IMPORTANT: In your final submission DO NOT add any additional print statements as 
        * this will interfere with the autograder
        */
-      System.out.println(correctedQuery);
+      //System.out.println(correctedQuery);
     }
     queriesFileReader.close();
   }

@@ -9,8 +9,10 @@ import java.io.IOError;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import edu.stanford.cs276.util.Dictionary;
@@ -69,8 +71,8 @@ public class LanguageModel implements Serializable {
 		  String token1 = tokens[i-1];
 		  String token2 = tokens[i];
 		  double bigramCount = (double)bigram.get(token1).count(token2);
-		  p -= LAMBDA*Math.log10(unigram.count(token2)/T)+
-				  (1-LAMBDA)*Math.log10(bigramCount/unigram.count(token1));
+		  p -= Math.log10(LAMBDA*(unigram.count(token2)/T)+
+				  		(1-LAMBDA)*(bigramCount/unigram.count(token1)));
 	  }
 	  
 	  return p;
@@ -165,18 +167,48 @@ public class LanguageModel implements Serializable {
     		// For all the tokens except the first one
     		if (i!=0){
     			String tok2 = tokens[i-1];
+    			//System.out.println("Tok2: "+tok2 );
     			// If tok2 is not in the bigram hashmap, associate an empty dictionary with it
     			if (!bigram.containsKey(tok2)){
     				bigram.put(tok2, new Dictionary());
     			} 
     			// Add tok1 as one of the entries in the dictionary associated with tok2
     			bigram.get(tok2).add(tok1);
+    			bigram.get(tok2).sortByValue(); // This is a bad way to do this
     		}
     	}
     	
         
       }
+      
       V = vocabulary.size(); // Set V to be the number of words in the dictionary
+      
+      
+      // Sort all unigram counts of each token (I still couldn't get it to work)
+      Iterator<String> vocabIter1 = vocabulary.iterator();
+      while (vocabIter1.hasNext()){
+    	  String token1 = vocabIter1.next();
+    	  Dictionary unigramCounts = bigram.get(token1);
+    	  
+
+    	  //unigramCounts.sortByValue();
+    	  Iterator<String> vocabIter2 = vocabulary.iterator();
+    	  while (vocabIter2.hasNext()){
+    		  String token2 = vocabIter2.next();
+    		  int count;
+    		  try {
+    			  count = unigramCounts.count(token2);
+    		  } catch (NullPointerException e) {
+    			  count =0;
+    		  }
+    	  }
+    	  //System.out.println(unigramCounts.count("sam"));
+    	  //System.out.println(bigram.get(token).count("I"));
+    	  //bigram.put(token, unigramCounts);
+    	  //System.out.println(bigram.get(token).count("sam"));
+    	  
+      
+      }
       input.close();
     }
     System.out.println("Done.");

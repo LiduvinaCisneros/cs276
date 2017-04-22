@@ -17,18 +17,26 @@ import java.io.Serializable;
  */
 public class NoisyChannelModel implements Serializable {
 	
-	private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
   private static NoisyChannelModel ncm_ = null;
   EditCostModel ecm_ = null;
 
   EmpiricalCostModel empiricalCostModel = null;
   UniformCostModel uniformCostModel = null;
 
+  
+  
   /*
    * Feel free to add more members here.
    * Your code here ...
    */
 
+  
+  public double editProbability(String original, String R) {
+	  
+	  return .5;
+  }
+  
   /**
    * Constructor
    * IMPORTANT NOTE: you should NOT change the access level for this constructor to 'public', 
