@@ -35,7 +35,6 @@ public class BuildModels {
     tokens[2]="sam";
     //System.out.println(languageModel.bigramProbability(tokens));
     
-    
     // Save the models to disk
     noisyChannelModel.save();
     languageModel.save();

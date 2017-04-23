@@ -12,6 +12,7 @@ public class RunCorrector {
 
   public static LanguageModel languageModel;
   public static NoisyChannelModel nsm;
+  public static CandidateGenerator cg;
 
   public static void main(String[] args) throws Exception {
     // Parse input arguments
@@ -61,16 +62,14 @@ public class RunCorrector {
 
     // Load models from disk
     languageModel = LanguageModel.load();
-    System.out.println(languageModel);
     nsm = NoisyChannelModel.load();
+    cg = CandidateGenerator.get();
+    
     BufferedReader queriesFileReader = new BufferedReader(new FileReader(new File(queryFilePath)));
     nsm.setProbabilityType(uniformOrEmpirical);
     
-    CandidateGenerator cg = CandidateGenerator.get();
-    
     /*
      * Tests for editDistance:
-    
     System.out.println(cg.editDistance("cats", "cast")==1);
     System.out.println(cg.editDistance("fats", "cast")==2);
     System.out.println(cg.editDistance("fatse", "caste")==2);
@@ -81,6 +80,7 @@ public class RunCorrector {
     System.out.println(cg.editDistance("baeee", "abeee")==1);
     
     */
+    
     String query = null;
     
     /*
@@ -101,13 +101,13 @@ public class RunCorrector {
     	String bestCand = query;
     	double bestScore = Double.NEGATIVE_INFINITY;
     	
-    	
     	// Iterate over all candidates
-    	Iterator<String> cands =  cg.getCandidates(query, languageModel).iterator();
+    	Iterator<String> cands =  cg.getCandidates(query).iterator();
     	while(cands.hasNext()) {
             String newQuery = cands.next();
+            //System.out.println(newQuery);
             
-            // If the candidate is more likely than bestScore, replace bestCand by it
+            // If the candidate is more likely than bestScore, substitute it for bestCand 
             double newScore = nsm.editProbability(query,newQuery);
             if (newScore>bestScore){
             	bestCand = newQuery;

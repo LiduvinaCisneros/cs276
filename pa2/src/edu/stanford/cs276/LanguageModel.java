@@ -65,14 +65,20 @@ public class LanguageModel implements Serializable {
   public double interpolatedProbability(String[] tokens){
 	  String first = tokens[0];
 	  double firstUnigramCount = (double)unigram.count(first);
-	  double p= -Math.log10(firstUnigramCount/T);
+	  double p = Math.log10(firstUnigramCount/T);
 
 	  for (int i=1;i<tokens.length;i++){
 		  String token1 = tokens[i-1];
 		  String token2 = tokens[i];
-		  double bigramCount = (double)bigram.get(token2).count(token1);
+		  double bigramCount;
+		  try {
+			  bigramCount = (double)bigram.get(token2).count(token1);
+		  } catch (NullPointerException e) {
+			  // If there are no bigrams of token1 token2
+			  bigramCount = 0;
+		  }
 		  double unigramCount = (double)unigram.count(token1);
-		  p -= Math.log10(LAMBDA*(unigram.count(token1)/T)+
+		  p += Math.log10(LAMBDA*(unigram.count(token1)/T)+
 				  		(1-LAMBDA)*(bigramCount/unigramCount));
 	  }
 	  
@@ -139,6 +145,7 @@ public class LanguageModel implements Serializable {
    * This method is called by the constructor, and computes language model parameters 
    * (i.e. counts of unigrams, bigrams, etc.), which are then stored in the class members
    * declared above.  
+   * TODO: Calculate also forward bigrams to improve candidate generation.
    */
   public void constructDictionaries(String corpusFilePath) throws Exception {
 

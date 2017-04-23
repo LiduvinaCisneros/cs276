@@ -18,11 +18,11 @@ public class UniformCostModel implements EditCostModel {
   public double editProbability(String original, String R, int distance) {
 	  // TODO: Your code here
 	  
-	  
-	  return Math.pow(uniformEditPrbability,distance); // Since all edits are equally probable, 
-	  												   //the probability of a single edit equals 
-	  												   // the probability of one edit to the power of 
-	  												   //the number of edits
+	/* Since all edits are equally probable, 
+	 * the probability of an edited candidate equals 
+	 * the probability of one edit to the power of the number of edits 
+	 */
+	  return Math.log10(Math.pow(uniformEditPrbability,distance)); 
 	  
   }
 }

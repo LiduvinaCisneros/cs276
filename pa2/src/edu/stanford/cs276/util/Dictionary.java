@@ -30,6 +30,8 @@ public class Dictionary implements Serializable {
   public List<HashMap.Entry<String, Integer>> getEntries(){
 	  List<HashMap.Entry<String, Integer>> list =
 		      new LinkedList<HashMap.Entry<String, Integer>>( map.entrySet() );
+	  
+	  
 	  return list;
   }
   
