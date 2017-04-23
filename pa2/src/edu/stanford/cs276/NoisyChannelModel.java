@@ -51,6 +51,8 @@ public class NoisyChannelModel implements Serializable {
   
   /*
    * @author Omer Korat
+   * Max is the maximal possible distance. If max=-1, then no distance limitations. 
+   * If edit distance is reached, return -1. 
    */
   public static int editDistance(String s1, String s2, int max){
 	  if (max==-1) max = (int)Double.POSITIVE_INFINITY;
@@ -90,7 +92,7 @@ public class NoisyChannelModel implements Serializable {
 					  		 };
 			  Arrays.sort(costs);
 			  if (i==j & costs[0]>max){
-				  return costs[0];
+				  return -1;
 			  }
 			  
 			  m[i][j]=costs[0];

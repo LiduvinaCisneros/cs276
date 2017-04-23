@@ -22,6 +22,9 @@ public class EmpiricalCostModel implements EditCostModel {
     System.out.println("Constructing edit distance map...");
     String line = null;
     
+    System.out.println(NoisyChannelModel.editDistance("edia", "eidt", 1));
+    
+    
     
     Dictionary editCounts = new Dictionary();
     errors = 0; 
