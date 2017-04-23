@@ -68,19 +68,6 @@ public class RunCorrector {
     BufferedReader queriesFileReader = new BufferedReader(new FileReader(new File(queryFilePath)));
     nsm.setProbabilityType(uniformOrEmpirical);
     
-    /*
-     * Tests for editDistance:
-    System.out.println(cg.editDistance("cats", "cast")==1);
-    System.out.println(cg.editDistance("fats", "cast")==2);
-    System.out.println(cg.editDistance("fatse", "caste")==2);
-    System.out.println(cg.editDistance("fatse", "cast")==3);
-    System.out.println(cg.editDistance("aaa", "a")==2);
-    System.out.println(cg.editDistance("ba", "ab")==1);
-    System.out.println(cg.editDistance("eeeba", "eeeab")==1);
-    System.out.println(cg.editDistance("baeee", "abeee")==1);
-    
-    */
-    
     String query = null;
     
     /*

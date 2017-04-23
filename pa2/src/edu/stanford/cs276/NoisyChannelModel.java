@@ -34,7 +34,7 @@ public class NoisyChannelModel implements Serializable {
   public double editProbability(String original, String R) {
 	  
 	  // Edit distance between original and R
-	  int distance = editDistance(original, R);
+	  int distance = editDistance(original, R, -1);
 	  
 	  // P(R) - Prior probability of R given the language model
 	  String[] RTokens = R.trim().split("\\s+");
@@ -52,8 +52,8 @@ public class NoisyChannelModel implements Serializable {
   /*
    * @author Omer Korat
    */
-  public static int editDistance(String s1, String s2){
-	  
+  public static int editDistance(String s1, String s2, int max){
+	  if (max==-1) max = (int)Double.POSITIVE_INFINITY;
 	  // Initiate table
 	  int[][] m=new int[s1.length()+1][s2.length()+1];
 	  
@@ -68,6 +68,7 @@ public class NoisyChannelModel implements Serializable {
 	  // Main loop
 	  for (int i=1;i<=s1.length();i++){
 		  for (int j=1;j<=s2.length();j++){
+			  
 			  int substitutionCost = 1;
 			  int transpositioncost = 1;
 			  
@@ -88,7 +89,14 @@ public class NoisyChannelModel implements Serializable {
 							  m[i-1][j-1] + transpositioncost
 					  		 };
 			  Arrays.sort(costs);
+			  if (i==j & costs[0]>max){
+				  return costs[0];
+			  }
+			  
 			  m[i][j]=costs[0];
+			  //System.out.println("after " + i + " and " + j);
+			  //printMatrix(m);
+			  //System.out.println();
 		  }
 	  }
 	  
@@ -109,7 +117,7 @@ public class NoisyChannelModel implements Serializable {
    * For more info about the Singleton pattern, see https://en.wikipedia.org/wiki/Singleton_pattern.  
    */
   private NoisyChannelModel(String editsFile) throws Exception {
-	empiricalCostModel = new EmpiricalCostModel(editsFile);
+	  empiricalCostModel = new EmpiricalCostModel(editsFile);
     uniformCostModel = new UniformCostModel();
    
   }

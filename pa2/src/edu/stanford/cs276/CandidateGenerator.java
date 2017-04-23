@@ -50,8 +50,16 @@ public class CandidateGenerator implements Serializable {
 
   public static final Character[] alphabet = { 'a', 'b', 'c', 'd', 'e', 'f',
       'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
-      'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7',
-      '8', '9', ' ', ',' };
+      'u', 'v', 'w', 'x', 'y', 'z'};
+
+
+  public static final Character[] nonLetters = { '0', '1', '2', '3', '4', '5', '6', '7',
+	      '8', '9', ' ', ',' };
+
+  
+  public static final Character[] letters  = { 'a', 'b', 'c', 'd', 'e', 'f',
+	      'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
+	      'u', 'v', 'w', 'x', 'y', 'z'};
 
   
   /* Generate all candidates for the target query 
@@ -75,6 +83,7 @@ public class CandidateGenerator implements Serializable {
 	  * based on the second word.
   * Unigram Strategy:
   	  * select the most likely unigrams as candidates. Not yet implemented. 
+  * TODO: handle mistyped spaces within word
   */
   public Set<String> getCandidates(String query) throws Exception {
 	    Set<String> candidates = new HashSet<String>();
@@ -219,7 +228,7 @@ public HashMap<String,HashMap<Integer,HashSet<String>>> findAllCorrectionsByBigr
     		//System.out.println("entry: "+entry.getKey());
     		/* if its frequency before tok2 is greater than the bigram threshold: */
     		if (entry.getValue() >= BIGRAM_FREQ_THRESHOLD){
-    			int editDistance = NoisyChannelModel.editDistance(entry.getKey(), tok1);
+    			int editDistance = NoisyChannelModel.editDistance(entry.getKey(), tok1, EDIT_THRESHOLD);
     			/* if its edit distance is less than the edit distance threshold: */
     			if (editDistance>0 & editDistance<=EDIT_THRESHOLD){
     				/* Add this token to the correction map: */
@@ -259,8 +268,144 @@ public HashMap<String,HashMap<Integer,HashSet<String>>> findAllCorrectionsByBigr
     
     return tokensToEditDistanceToCorrections;
   }
+  
+
 
   /**
+ * @author Omer ASUS
+ * Generate all edits of a misspelled word which are within some edit distance.
+ * Actually if the distance is set to more than 1 runtime is crazy so don't try it.
+ * @param misspelling	A misspelled word
+ * @param distance		How distant the generated edits can be 
+ * @return	a set of all edits of misspelling within the given distance
+ */
+ public static HashSet<String> generateEdits(String misspelling, int distance) {
+	HashSet<String> edits = new HashSet<String>();
+	
+	for (Character c:nonLetters){
+		misspelling.replace(c.toString(), "");
+	}
+	
+	edits.addAll(generateTranspositions(misspelling));
+	edits.addAll(generateSubstitutions(misspelling));
+	edits.addAll(generateDeletions(misspelling));
+	edits.addAll(generateInsertions(misspelling));
+	
+	distance--;
+	
+	while (distance >0){
+		HashSet<String> newEdits = new HashSet<String>();
+		for (String edit : edits){
+			newEdits.addAll(generateTranspositions(edit));
+			newEdits.addAll(generateSubstitutions(edit));
+			newEdits.addAll(generateDeletions(edit));
+			newEdits.addAll(generateInsertions(edit));
+		}
+		edits.addAll(newEdits);
+	}
+	
+	return edits;
+	
+ }
+
+ /**@author Omer Korat */
+ public static HashSet<String> generateInsertions(String misspelling) {
+	 HashSet<String> insertions = new HashSet<String>();
+	 
+	 char[] chars = (misspelling+"$").toCharArray();
+	 
+	 for (int i=0;i<chars.length-1;i++){
+		 for (char c : letters){
+			 char[] newChars = new char[chars.length];
+			 int offset = 0;
+			 for (int j=0;j<chars.length-1;j++){
+				 if (j==i){
+					 newChars[i]=c;
+					 offset++;
+				 } 
+				 newChars[j+offset] = chars[j];
+			 }
+			 String correction = String.valueOf(newChars);
+			 insertions.add(correction);
+		 }
+	 }
+	 
+	 return insertions;
+ }
+ 
+ /**@author Omer Korat */
+ public static HashSet<String> generateDeletions(String misspelling) {
+	 HashSet<String> deletions= new HashSet<String>();
+	 
+	 char[] chars = (misspelling).toCharArray();
+	 
+	 for (int i=0;i<chars.length;i++){
+		 char[] newChars = new char[chars.length-1];
+		 int offset = 0;
+		 for (int j=0;j<chars.length-1;j++){
+			 if (j==i){
+				 offset++;
+			 } 
+			 newChars[j] = chars[j+offset];
+		 }
+		 String correction = String.valueOf(newChars);
+		 deletions.add(correction);
+	 }
+	 
+	 return deletions;
+ }
+ 
+ /**@author Omer Korat */
+ public static HashSet<String> generateSubstitutions(String misspelling) {
+	 HashSet<String> substitutions = new HashSet<String>();
+	 
+	 char[] chars = (misspelling).toCharArray();
+	 
+	 for (int i=0;i<chars.length;i++){
+		 for (char c : letters){
+			 if (c!=chars[i]){
+				 char[] newChars = new char[chars.length];
+				 for (int j=0;j<chars.length;j++){
+					 if (j==i){
+						 newChars[j] = c;
+					 } else {
+						 newChars[j] = chars[j];
+					 }
+				 }
+				 String correction = String.valueOf(newChars);
+				 substitutions.add(correction);
+			 }
+		 }
+	 }
+	 
+	 return substitutions;
+ }
+
+/**@author Omer Korat */
+public static HashSet<String> generateTranspositions(String misspelling) {
+	 HashSet<String> transpositions = new HashSet<String>();
+	 
+
+	 char[] chars = (misspelling).toCharArray();
+	 
+	 for (int i=0;i<chars.length-1;i++){
+		 char[] newChars = new char[chars.length];
+		 for (int j=0;j<chars.length;j++){
+			 if (j==i){
+				 newChars[j] = chars[j+1];
+				 newChars[j+1] = chars[j];
+			 } else if (j==i+1) {
+			 } else {
+				 newChars[j] = chars[j];
+			 }
+		 }
+		 String correction = String.valueOf(newChars);
+		 transpositions.add(correction);
+	 }
+	 return transpositions;
+ }
+ 
+ /**
   * @author Omer Korat
   * @param tokens	array of tokens, basis of candidate
   * @param index		index in which a word will be replaced
@@ -285,24 +430,24 @@ public HashMap<String,HashMap<Integer,HashSet<String>>> findAllCorrectionsByBigr
   }
   
   
-  /**
- * @author Omer ASUS
- * @param arr
- * @return	all pairs in the array
- */
-public static Iterator<int[]> cartesianProductIter(int[] arr){
-
-	ArrayList<int[]> pairs = new ArrayList<int[]>();
-	  
-      for (int i = 0; i < arr.length; i++)
-          for (int j = i; j < arr.length; j++){
-        	  int[] pair = new int[2];
-        	  pair[0]=i;pair[1]=j;
-        	  pairs.add(pair);
-          }
-      
-      return pairs.iterator();
-  }
+	 /**
+	 * @author Omer ASUS
+	 * @param arr
+	 * @return	all pairs in the array
+	 */
+	public static Iterator<int[]> cartesianProductIter(int[] arr){
+	
+		ArrayList<int[]> pairs = new ArrayList<int[]>();
+		  
+	      for (int i = 0; i < arr.length; i++)
+	          for (int j = i; j < arr.length; j++){
+	        	  int[] pair = new int[2];
+	        	  pair[0]=i;pair[1]=j;
+	        	  pairs.add(pair);
+	          }
+	      
+	      return pairs.iterator();
+	  }
 
 
   /**
@@ -332,7 +477,13 @@ public static Iterator<int[]> cartesianProductIter(int[] arr){
 		    }
 		    System.out.println();
 		}
-
+  /** @author Omer Korat */
+  public static void printArray(char[] a){
+	  for (int i = 0; i < a.length; i++) {
+		       System.out.print(a[i] + " ");
+		    }
+		    System.out.println();
+		}
 }
 
 
